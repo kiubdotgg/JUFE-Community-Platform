@@ -12,7 +12,8 @@ function toast(msg, type = "success") {
 }
 
 function timeAgo(dt) {
-  const now = Date.now(), diff = now - new Date(dt).getTime();
+  const now = Date.now();
+  const diff = now - new Date(dt).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "刚刚";
   if (mins < 60) return `${mins}分钟前`;
@@ -21,11 +22,16 @@ function timeAgo(dt) {
   return `${Math.floor(hrs / 24)}天前`;
 }
 
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s ?? "";
+  return d.innerHTML;
+}
+
 function avatarFallback(name, cls = "avatar") {
   const el = document.createElement("div");
   el.className = cls;
-  if (name) el.textContent = name.charAt(0).toUpperCase();
-  else el.textContent = "?";
+  el.textContent = name ? name.charAt(0).toUpperCase() : "?";
   return el;
 }
 
@@ -34,16 +40,12 @@ function avatarImg(url, name, cls = "avatar") {
     const img = document.createElement("img");
     img.className = cls;
     img.src = url;
-    img.onerror = function () { this.replaceWith(avatarFallback(name, cls)); };
+    img.onerror = function () {
+      this.replaceWith(avatarFallback(name, cls));
+    };
     return img;
   }
   return avatarFallback(name, cls);
-}
-
-function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = s ?? "";
-  return d.innerHTML;
 }
 
 // ==================== Auth ====================
@@ -78,6 +80,7 @@ $("#authForm").addEventListener("submit", async (e) => {
   if (isRegisterMode) {
     const username = $("#authUsername").value.trim();
     const confirm = $("#authConfirmPassword").value.trim();
+
     if (!username) {
       $("#authError").textContent = "请输入用户名";
       return;
@@ -96,6 +99,7 @@ $("#authForm").addEventListener("submit", async (e) => {
       $("#authError").textContent = res.msg;
       return;
     }
+
     toast("注册成功，请登录");
     toggleAuthMode();
   } else {
@@ -128,22 +132,22 @@ async function loadApp() {
   $("#authOverlay").style.display = "none";
   $("#appLayout").style.display = "flex";
 
-  navigateTo("feed");
   setupNav();
   setupLogout();
+  navigateTo("feed");
 }
 
 function setupNav() {
   $$(".sidebar-nav a[data-page]").forEach(link => {
-    link.addEventListener("click", (e) => {
+    link.onclick = (e) => {
       e.preventDefault();
       navigateTo(link.dataset.page);
-    });
+    };
   });
 }
 
 function setupLogout() {
-  $("#logoutBtn").addEventListener("click", () => {
+  $("#logoutBtn").onclick = () => {
     localStorage.removeItem("token");
     api.setToken(null);
     appState.isLogin = false;
@@ -151,15 +155,18 @@ function setupLogout() {
 
     $("#appLayout").style.display = "none";
     $("#authOverlay").style.display = "flex";
+
     if (isRegisterMode) toggleAuthMode();
     $("#authError").textContent = "";
-  });
+  };
 }
 
 function navigateTo(page) {
   appState.currentPage = page;
+
   $$(".sidebar-nav a").forEach(a => a.classList.remove("active"));
   $(`.sidebar-nav a[data-page="${page}"]`)?.classList.add("active");
+
   $$(".page").forEach(p => p.classList.remove("active"));
   $(`#page-${page}`)?.classList.add("active");
 
@@ -183,7 +190,8 @@ function navigateTo(page) {
 }
 
 // ==================== Feed ====================
-let feedSort = "latest", feedPage = 1;
+let feedSort = "latest";
+let feedPage = 1;
 
 async function loadFeed() {
   $("#feedList").innerHTML = '<div class="loading">加载中...</div>';
@@ -195,44 +203,47 @@ async function loadFeed() {
     return;
   }
 
-  renderPosts(res.data);
+  renderPosts(res.data || []);
   setupComposer();
   initPostEvents();
 }
 
 function renderPosts(posts) {
   if (!posts.length) {
-    $("#feedList").innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>暂无动态，快来发布第一条吧！</p></div>';
+    $("#feedList").innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无动态，快来发布第一条吧！</p></div>';
     return;
   }
 
   $("#feedList").innerHTML = posts.map(p => `
-    <div class="card post-card" data-post-id="${p.id}">
-      ${avatarImg(p.avatar_url, p.username).outerHTML.replace('<div', '<div style="cursor:pointer"')}
-      <div class="post-body">
-        <div class="post-header">
-          <span class="name">${esc(p.username)}</span>
-          <span class="time">${timeAgo(p.created_at)}</span>
+    <div class="feed-item" data-post-id="${p.id}">
+      <div class="feed-header">
+        ${avatarImg(p.avatar_url, p.username, "feed-avatar").outerHTML}
+        <div class="feed-user-info">
+          <div class="feed-username">${esc(p.username)}</div>
+          <div class="feed-time">${timeAgo(p.created_at)}</div>
         </div>
-        <div class="post-content">${esc(p.content)}</div>
-        ${p.images && p.images.length ? `
-        <div class="post-images">
-          ${p.images.map(img => `<img src="${img}" alt="">`).join("")}
-        </div>` : ""}
-        <div class="post-footer">
-          <button class="${p.is_liked ? "liked" : ""}" data-action="like" data-post-id="${p.id}">
-            ${p.is_liked ? "❤️" : "🤍"} <span class="count">${p.like_count || 0}</span>
-          </button>
-          <button class="${p.is_favorited ? "favorited" : ""}" data-action="favorite" data-post-id="${p.id}">
-            ${p.is_favorited ? "⭐ 已收藏" : "☆ 收藏"}
-          </button>
-          <button data-action="comment" data-post-id="${p.id}">
-            💬 <span class="count">${p.comment_count || 0}</span>
-          </button>
-          <button data-action="detail" data-post-id="${p.id}">📋 详情</button>
-        </div>
-        <div class="comment-section" id="comments-${p.id}" style="display:none"></div>
       </div>
+      <div class="feed-body">${esc(p.content)}</div>
+      ${p.images && p.images.length ? `
+        <div class="post-images" style="margin-bottom: 14px;">
+          ${p.images.map(img => `<img src="${img}" alt="">`).join("")}
+        </div>
+      ` : ""}
+      <div class="feed-actions-row">
+        <button class="feed-action-btn ${p.is_liked ? "liked" : ""}" data-action="like" data-post-id="${p.id}">
+          ${p.is_liked ? "❤️" : "🤍"} <span>${p.like_count || 0}</span>
+        </button>
+        <button class="feed-action-btn ${p.is_favorited ? "favorited" : ""}" data-action="favorite" data-post-id="${p.id}">
+          ${p.is_favorited ? "⭐ 已收藏" : "☆ 收藏"}
+        </button>
+        <button class="feed-action-btn" data-action="comment" data-post-id="${p.id}">
+          💬 <span>${p.comment_count || 0}</span>
+        </button>
+        <button class="feed-action-btn" data-action="detail" data-post-id="${p.id}">
+          📋 详情
+        </button>
+      </div>
+      <div class="comment-section" id="comments-${p.id}" style="display:none"></div>
     </div>
   `).join("");
 }
@@ -280,35 +291,38 @@ async function loadFavorites() {
 
   const items = res.data?.items || [];
   if (!items.length) {
-    container.innerHTML = '<div class="empty-state favorites-empty"><div class="icon">⭐</div><p>你还没有收藏任何帖子</p></div>';
+    container.innerHTML = '<div class="favorites-empty">你还没有收藏任何帖子</div>';
     return;
   }
 
   container.innerHTML = items.map(item => `
-    <div class="card post-card" data-post-id="${item.post_id}">
-      ${avatarImg(item.avatar_url, item.username).outerHTML}
-      <div class="post-body">
-        <div class="post-header">
-          <span class="name">${esc(item.username)}</span>
-          <span class="time">收藏于 ${timeAgo(item.created_at)}</span>
+    <div class="feed-item" data-post-id="${item.post_id}">
+      <div class="feed-header">
+        ${avatarImg(item.avatar_url, item.username, "feed-avatar").outerHTML}
+        <div class="feed-user-info">
+          <div class="feed-username">${esc(item.username)}</div>
+          <div class="feed-time">收藏于 ${timeAgo(item.created_at)}</div>
         </div>
-        <div class="post-content">${esc(item.content)}</div>
-        ${item.images && item.images.length ? `
-        <div class="post-images">
+      </div>
+      <div class="feed-body">${esc(item.content)}</div>
+      ${item.images && item.images.length ? `
+        <div class="post-images" style="margin-bottom: 14px;">
           ${item.images.map(img => `<img src="${img}" alt="">`).join("")}
-        </div>` : ""}
-        <div class="post-footer">
-          <button class="favorited" data-action="favorite" data-post-id="${item.post_id}">
-            ⭐ 已收藏
-          </button>
-          <button data-action="detail" data-post-id="${item.post_id}">📋 详情</button>
-          <button disabled>
-            ❤️ <span class="count">${item.like_count || 0}</span>
-          </button>
-          <button disabled>
-            💬 <span class="count">${item.comment_count || 0}</span>
-          </button>
         </div>
+      ` : ""}
+      <div class="feed-actions-row">
+        <button class="feed-action-btn favorited" data-action="favorite" data-post-id="${item.post_id}">
+          ⭐ 已收藏
+        </button>
+        <button class="feed-action-btn" data-action="detail" data-post-id="${item.post_id}">
+          📋 详情
+        </button>
+        <button class="feed-action-btn" disabled>
+          ❤️ <span>${item.like_count || 0}</span>
+        </button>
+        <button class="feed-action-btn" disabled>
+          💬 <span>${item.comment_count || 0}</span>
+        </button>
       </div>
     </div>
   `).join("");
@@ -327,7 +341,7 @@ function initPostEvents() {
         return;
       }
       btn.classList.toggle("liked", res.data.liked);
-      btn.innerHTML = `${res.data.liked ? "❤️" : "🤍"} <span class="count">${res.data.like_count}</span>`;
+      btn.innerHTML = `${res.data.liked ? "❤️" : "🤍"} <span>${res.data.like_count}</span>`;
     };
   });
 
@@ -396,22 +410,23 @@ function renderCommentTree(comments, postId, depth = 0) {
   return comments.map(c => {
     const cls = depth > 0 ? "comment-nested" : "";
     return `
-    <div class="${cls}">
-      <div class="comment-item">
-        ${avatarImg(c.avatar_url, c.username, "avatar avatar-sm").outerHTML}
-        <div class="comment-body">
-          <span class="comment-username">${esc(c.username)}</span>
-          <div class="comment-content">${esc(c.content)}</div>
-          <span class="comment-time">${timeAgo(c.created_at)}</span>
-          <button class="comment-reply-btn" data-reply="${c.id}" data-post="${postId}">回复</button>
-          <div class="comment-reply-box" id="replyBox-${c.id}" style="display:none">
-            <input class="input" id="replyInput-${c.id}" placeholder="回复 ${esc(c.username)}...">
-            <button class="btn btn-primary btn-sm" data-submit-reply="${c.id}" data-post="${postId}">发送</button>
+      <div class="${cls}">
+        <div class="comment-item">
+          ${avatarImg(c.avatar_url, c.username, "avatar avatar-sm").outerHTML}
+          <div class="comment-body">
+            <span class="comment-username">${esc(c.username)}</span>
+            <div class="comment-content">${esc(c.content)}</div>
+            <span class="comment-time">${timeAgo(c.created_at)}</span>
+            <button class="comment-reply-btn" data-reply="${c.id}" data-post="${postId}">回复</button>
+            <div class="comment-reply-box" id="replyBox-${c.id}" style="display:none">
+              <input class="input" id="replyInput-${c.id}" placeholder="回复 ${esc(c.username)}...">
+              <button class="btn btn-primary btn-sm" data-submit-reply="${c.id}" data-post="${postId}">发送</button>
+            </div>
           </div>
         </div>
+        ${c.replies ? renderCommentTree(c.replies, postId, depth + 1) : ""}
       </div>
-      ${c.replies ? renderCommentTree(c.replies, postId, depth + 1) : ""}
-    </div>`;
+    `;
   }).join("") + initReplyButtons();
 }
 
@@ -465,33 +480,37 @@ async function showPostDetail(postId) {
   const p = res.data;
 
   $("#feedList").innerHTML = `
-    <button class="btn btn-outline btn-sm back-btn" id="backToFeed">← 返回动态列表</button>
-    <div class="card post-card">
-      ${avatarImg(p.avatar_url, p.username).outerHTML}
-      <div class="post-body">
-        <div class="post-header">
-          <span class="name">${esc(p.username)}</span>
-          <span class="time">${timeAgo(p.created_at)}</span>
+    <button class="btn btn-outline btn-sm" id="backToFeed" style="margin-bottom: 16px;">← 返回动态列表</button>
+    <div class="feed-item">
+      <div class="feed-header">
+        ${avatarImg(p.avatar_url, p.username, "feed-avatar").outerHTML}
+        <div class="feed-user-info">
+          <div class="feed-username">${esc(p.username)}</div>
+          <div class="feed-time">${timeAgo(p.created_at)}</div>
         </div>
-        <div class="post-content">${esc(p.content)}</div>
-        ${p.images && p.images.length ? `
-        <div class="post-images">
-          ${p.images.map(img => `<img src="${img}" alt="">`).join("")}
-        </div>` : ""}
-        <div class="post-footer">
-          <button class="${p.is_liked ? "liked" : ""}" data-action="like" data-post-id="${p.id}">
-            ${p.is_liked ? "❤️" : "🤍"} <span class="count">${p.like_count || 0}</span>
-          </button>
-          <button class="${p.is_favorited ? "favorited" : ""}" data-action="favorite" data-post-id="${p.id}">
-            ${p.is_favorited ? "⭐ 已收藏" : "☆ 收藏"}
-          </button>
-          <span style="font-size:13px;color:var(--text-secondary)">👁 ${p.view_count} 浏览</span>
-        </div>
-        <div class="comment-section" id="comments-${p.id}" style="display:block"></div>
       </div>
-    </div>`;
+      <div class="feed-body">${esc(p.content)}</div>
+      ${p.images && p.images.length ? `
+        <div class="post-images" style="margin-bottom: 14px;">
+          ${p.images.map(img => `<img src="${img}" alt="">`).join("")}
+        </div>
+      ` : ""}
+      <div class="feed-actions-row">
+        <button class="feed-action-btn ${p.is_liked ? "liked" : ""}" data-action="like" data-post-id="${p.id}">
+          ${p.is_liked ? "❤️" : "🤍"} <span>${p.like_count || 0}</span>
+        </button>
+        <button class="feed-action-btn ${p.is_favorited ? "favorited" : ""}" data-action="favorite" data-post-id="${p.id}">
+          ${p.is_favorited ? "⭐ 已收藏" : "☆ 收藏"}
+        </button>
+        <button class="feed-action-btn" disabled>
+          👁 <span>${p.view_count || 0}</span>
+        </button>
+      </div>
+      <div class="comment-section" id="comments-${p.id}" style="display:block"></div>
+    </div>
+  `;
 
-  document.getElementById("backToFeed").onclick = loadFeed;
+  $("#backToFeed").onclick = loadFeed;
   initPostEvents();
   await loadComments(postId);
 }
@@ -506,23 +525,21 @@ async function loadRecommend() {
     return;
   }
 
-  const list = res.data;
+  const list = res.data || [];
   if (!list.length) {
-    $("#recommendList").innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>暂时没有更多推荐，完善个人信息可获得更精准推荐哦</p></div>';
+    $("#recommendList").innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>暂时没有更多推荐，完善个人信息可获得更精准推荐哦</p></div>';
     return;
   }
 
   $("#recommendList").innerHTML = list.map(u => `
-    <div class="card recommend-card">
-      ${avatarImg(u.avatar_url, u.username, "avatar avatar-lg").outerHTML}
-      <div class="name">${esc(u.username)}</div>
-      <div class="campus">${esc(u.campus || "未知校园")} · ${esc(u.major || "未知专业")}</div>
-      ${u.bio ? `<p style="font-size:13px;color:var(--text-secondary);margin:4px 0">${esc(u.bio)}</p>` : ""}
-      <div class="tags">
-        ${(u.interests || "").split(",").filter(Boolean).map(t => `<span class="badge badge-primary">${esc(t.trim())}</span>`).join("")}
+    <div class="recommend-card">
+      ${avatarImg(u.avatar_url, u.username, "recommend-avatar").outerHTML}
+      <div class="recommend-name">${esc(u.username)}</div>
+      <div class="recommend-meta">${esc(u.campus || "未知校园")} · ${esc(u.major || "未知专业")}</div>
+      <div class="recommend-interests">
+        ${(u.interests || "").split(",").filter(Boolean).map(t => `<span class="interest-tag">${esc(t.trim())}</span>`).join("")}
       </div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">匹配度: ${Math.round(u.score * 100 / 7)}%</div>
-      <button class="btn btn-primary btn-sm" data-add-friend="${u.id}">加好友</button>
+      <button class="btn-add-friend" data-add-friend="${u.id}">加好友</button>
     </div>
   `).join("");
 
@@ -545,26 +562,28 @@ async function loadFriends(tab = "list") {
   if (tab === "list") {
     const res = await api.getFriends();
     if (res.code !== 0) return;
-    const friends = res.data;
+
+    const friends = res.data || [];
     if (!friends.length) {
-      $("#friendListContent").innerHTML = '<div class="empty-state"><div class="icon">👋</div><p>还没有好友，去交友推荐看看吧！</p></div>';
+      $("#friendListContent").innerHTML = '<div class="empty-state"><div class="empty-icon">👋</div><p>还没有好友，去交友推荐看看吧！</p></div>';
     } else {
-      $("#friendListContent").innerHTML = '<div class="friend-list">' + friends.map(f => `
-        <div class="card friend-item">
-          ${avatarImg(f.avatar_url, f.username, "avatar").outerHTML}
-          <div class="info">
-            <div class="name">${esc(f.username)}</div>
-            <div class="campus">${esc(f.campus || "")} ${esc(f.major || "")}</div>
+      $("#friendListContent").innerHTML = friends.map(f => `
+        <div class="friend-item">
+          ${avatarImg(f.avatar_url, f.username, "friend-avatar").outerHTML}
+          <div class="friend-info">
+            <div class="friend-name">${esc(f.username)}</div>
+            <div class="friend-email">${esc(f.campus || "")} ${esc(f.major || "")}</div>
           </div>
         </div>
-      `).join("") + "</div>";
+      `).join("");
     }
   } else {
     const res = await api.getPending();
     if (res.code !== 0) return;
-    const pending = res.data;
+
+    const pending = res.data || [];
     if (!pending.length) {
-      $("#friendListContent").innerHTML = '<div class="empty-state"><div class="icon">📨</div><p>暂无待处理的好友申请</p></div>';
+      $("#friendListContent").innerHTML = '<div class="empty-state"><div class="empty-icon">📨</div><p>暂无待处理的好友申请</p></div>';
     } else {
       $("#friendListContent").innerHTML = pending.map(r => `
         <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
@@ -606,67 +625,50 @@ async function loadProfile() {
 
   $("#profileContent").innerHTML = `
     <div class="profile-header">
-      ${avatarImg(u.avatar_url, u.username, "avatar avatar-lg").outerHTML}
-      <div class="profile-info">
-        <h2>${esc(u.username)}</h2>
-        <div class="meta">${esc(u.campus || "未设置学校")} · ${esc(u.major || "未设置专业")} · ${esc(u.grade || "")}</div>
-        <div class="bio">${esc(u.bio || "这个人很懒，什么都没写...")}</div>
-        <div class="tags" style="margin-top:8px">
-          ${(u.interests || "").split(",").filter(Boolean).map(t => `<span class="badge badge-primary">${esc(t.trim())}</span>`).join("")}
-        </div>
-        <div class="profile-stats">
-          <div><div class="num">${u.gender === 1 ? "♂" : u.gender === 2 ? "♀" : "—"}</div><div class="label">性别</div></div>
-          <div><div class="num">${u.birthday || "—"}</div><div class="label">生日</div></div>
-        </div>
-      </div>
+      ${avatarImg(u.avatar_url, u.username, "profile-avatar-large").outerHTML}
+      <div class="profile-name">${esc(u.username)}</div>
+      <div class="profile-email-display">${esc(u.email || "")}</div>
     </div>
-    <div style="margin-top:16px">
-      <h3 style="margin-bottom:12px">编辑资料</h3>
-      <div class="edit-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label>用户名</label>
-            <input class="input" id="editUsername" value="${esc(u.username)}">
-          </div>
-          <div class="form-group">
-            <label>学校</label>
-            <input class="input" id="editCampus" value="${esc(u.campus || "")}" placeholder="例如：北京大学">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>专业</label>
-            <input class="input" id="editMajor" value="${esc(u.major || "")}" placeholder="例如：计算机科学">
-          </div>
-          <div class="form-group">
-            <label>年级</label>
-            <input class="input" id="editGrade" value="${esc(u.grade || "")}" placeholder="例如：大三">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>性别</label>
-            <select class="input" id="editGender">
-              <option value="0" ${u.gender === 0 ? "selected" : ""}>未设置</option>
-              <option value="1" ${u.gender === 1 ? "selected" : ""}>男</option>
-              <option value="2" ${u.gender === 2 ? "selected" : ""}>女</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>生日</label>
-            <input class="input" type="date" id="editBirthday" value="${u.birthday || ""}">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>个人简介</label>
-          <textarea class="input textarea" id="editBio" placeholder="介绍一下自己...">${esc(u.bio || "")}</textarea>
-        </div>
-        <div class="form-group">
-          <label>兴趣爱好（逗号分隔）</label>
-          <input class="input" id="editInterests" value="${esc(u.interests || "")}" placeholder="篮球, 编程, 电影">
-        </div>
-        <button class="btn btn-primary" id="saveProfileBtn">保存修改</button>
+
+    <div class="profile-details">
+      <h3>编辑资料</h3>
+      <div class="form-group">
+        <label>用户名</label>
+        <input class="input" id="editUsername" value="${esc(u.username)}">
       </div>
+      <div class="form-group">
+        <label>学校</label>
+        <input class="input" id="editCampus" value="${esc(u.campus || "")}" placeholder="例如：北京大学">
+      </div>
+      <div class="form-group">
+        <label>专业</label>
+        <input class="input" id="editMajor" value="${esc(u.major || "")}" placeholder="例如：计算机科学">
+      </div>
+      <div class="form-group">
+        <label>年级</label>
+        <input class="input" id="editGrade" value="${esc(u.grade || "")}" placeholder="例如：大三">
+      </div>
+      <div class="form-group">
+        <label>性别</label>
+        <select class="input" id="editGender">
+          <option value="0" ${u.gender === 0 ? "selected" : ""}>未设置</option>
+          <option value="1" ${u.gender === 1 ? "selected" : ""}>男</option>
+          <option value="2" ${u.gender === 2 ? "selected" : ""}>女</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>生日</label>
+        <input class="input" type="date" id="editBirthday" value="${u.birthday || ""}">
+      </div>
+      <div class="form-group">
+        <label>个人简介</label>
+        <textarea class="input textarea" id="editBio" placeholder="介绍一下自己...">${esc(u.bio || "")}</textarea>
+      </div>
+      <div class="form-group">
+        <label>兴趣爱好（逗号分隔）</label>
+        <input class="input" id="editInterests" value="${esc(u.interests || "")}" placeholder="篮球, 编程, 电影">
+      </div>
+      <button class="btn btn-primary" id="saveProfileBtn">保存修改</button>
     </div>
   `;
 
