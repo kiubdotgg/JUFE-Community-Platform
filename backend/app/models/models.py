@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Enum, JSON, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Enum, JSON, ForeignKey, func, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
+
 
 
 class User(Base):
