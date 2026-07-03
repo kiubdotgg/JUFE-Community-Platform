@@ -115,3 +115,12 @@ class RecommendUser(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class FavoriteItem(BaseModel):
+    post_id: int
+    created_at: datetime
+
+class FavoriteListResponse(BaseModel):
+    items: List[FavoriteItem]
