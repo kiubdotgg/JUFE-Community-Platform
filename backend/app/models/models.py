@@ -23,7 +23,7 @@ class User(Base):
 
     posts = relationship("Post", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
-
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
 
 class Post(Base):
     __tablename__ = "posts"
@@ -40,7 +40,7 @@ class Post(Base):
 
     user = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
-
+    favorites = relationship("Favorite", back_populates="post", cascade="all, delete-orphan")
 
 class Comment(Base):
     __tablename__ = "comments"
