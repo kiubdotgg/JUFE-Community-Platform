@@ -34,27 +34,14 @@ def create_post(
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
 
-@router.get("/{post_id}")
-def get_post(
-    post_id: int,
+@router.get("/favorites/me")
+def get_my_favorites(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     try:
-        post = post_service.get_post_detail(db, post_id, user_id)
-        return {"code": 0, "data": post.model_dump(), "msg": "获取成功"}
-    except ValueError as e:
-        return {"code": 1, "data": None, "msg": str(e)}
-
-@router.delete("/{post_id}")
-def delete_post(
-    post_id: int,
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    try:
-        post_service.delete_post(db, post_id, user_id)
-        return {"code": 0, "data": None, "msg": "删除成功"}
+        favorites = post_service.get_my_favorites(db, user_id)
+        return {"code": 0, "data": favorites.model_dump(), "msg": "获取成功"}
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
 
@@ -82,13 +69,26 @@ def unfavorite_post(
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
 
-@router.get("/favorites/me")
-def get_my_favorites(
+@router.get("/{post_id}")
+def get_post(
+    post_id: int,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     try:
-        favorites = post_service.get_my_favorites(db, user_id)
-        return {"code": 0, "data": favorites.model_dump(), "msg": "获取成功"}
+        post = post_service.get_post_detail(db, post_id, user_id)
+        return {"code": 0, "data": post.model_dump(), "msg": "获取成功"}
+    except ValueError as e:
+        return {"code": 1, "data": None, "msg": str(e)}
+
+@router.delete("/{post_id}")
+def delete_post(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        post_service.delete_post(db, post_id, user_id)
+        return {"code": 0, "data": None, "msg": "删除成功"}
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
