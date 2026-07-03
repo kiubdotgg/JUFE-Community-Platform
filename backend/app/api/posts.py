@@ -7,7 +7,6 @@ from app.services import post_service
 
 router = APIRouter(prefix="/api/posts", tags=["帖子"])
 
-
 @router.get("")
 def list_posts(
     sort: str = Query("latest"),
@@ -23,7 +22,6 @@ def list_posts(
         posts = post_service.get_posts(db, user_id, skip, page_size)
     return {"code": 0, "data": [p.model_dump() for p in posts], "msg": "获取成功"}
 
-
 @router.post("")
 def create_post(
     data: PostCreate,
@@ -35,7 +33,6 @@ def create_post(
         return {"code": 0, "data": post.model_dump(), "msg": "发布成功"}
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
-
 
 @router.get("/{post_id}")
 def get_post(
@@ -49,7 +46,6 @@ def get_post(
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
 
-
 @router.delete("/{post_id}")
 def delete_post(
     post_id: int,
@@ -59,5 +55,40 @@ def delete_post(
     try:
         post_service.delete_post(db, post_id, user_id)
         return {"code": 0, "data": None, "msg": "删除成功"}
+    except ValueError as e:
+        return {"code": 1, "data": None, "msg": str(e)}
+
+@router.post("/{post_id}/favorite")
+def favorite_post(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        post_service.add_favorite(db, user_id, post_id)
+        return {"code": 0, "data": None, "msg": "收藏成功"}
+    except ValueError as e:
+        return {"code": 1, "data": None, "msg": str(e)}
+
+@router.delete("/{post_id}/favorite")
+def unfavorite_post(
+    post_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        post_service.remove_favorite(db, user_id, post_id)
+        return {"code": 0, "data": None, "msg": "取消收藏成功"}
+    except ValueError as e:
+        return {"code": 1, "data": None, "msg": str(e)}
+
+@router.get("/favorites/me")
+def get_my_favorites(
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    try:
+        favorites = post_service.get_my_favorites(db, user_id)
+        return {"code": 0, "data": favorites.model_dump(), "msg": "获取成功"}
     except ValueError as e:
         return {"code": 1, "data": None, "msg": str(e)}
