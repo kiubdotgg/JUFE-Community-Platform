@@ -435,6 +435,9 @@
             flex-shrink: 0;
         }
 
+
+        
+
         /* ==================== 主内容区 ==================== */
         .main-content {
             flex: 1;
@@ -605,6 +608,27 @@
         .feed-action-btn.liked {
             color: #ef4444;
         }
+
+        .feed-action-btn.favorited {
+    color: #f59e0b;
+}
+
+.feed-action-btn.favorited:hover {
+    color: #d97706;
+}
+
+.favorite-page-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.favorites-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
 
         /* ==================== 交友推荐卡片网格 ==================== */
         .recommend-grid {
@@ -780,6 +804,9 @@
             font-size: 12px;
             color: var(--text-muted);
         }
+
+
+        
 
         /* ==================== 个人中心 ==================== */
         .profile-header {
@@ -1329,12 +1356,13 @@
                 <span>校园交友</span>
             </div>
             <ul class="sidebar-nav">
-                <li><a data-page="feed" class="active"><span class="nav-icon">🏠</span> 动态广场</a></li>
-                <li><a data-page="recommend"><span class="nav-icon">🎯</span> 交友推荐</a></li>
-                <li><a data-page="friends"><span class="nav-icon">👥</span> 我的好友</a></li>
-                <li><a data-page="profile"><span class="nav-icon">👤</span> 个人中心</a></li>
-                <li><a id="logoutBtn" style="color:#ef4444"><span class="nav-icon">🚪</span> 退出登录</a></li>
-            </ul>
+    <li><a data-page="feed" class="active"><span class="nav-icon">🏠</span> 动态广场</a></li>
+    <li><a data-page="recommend"><span class="nav-icon">🎯</span> 交友推荐</a></li>
+    <li><a data-page="friends"><span class="nav-icon">👥</span> 我的好友</a></li>
+    <li><a data-page="favorites"><span class="nav-icon">⭐</span> 我的收藏</a></li>
+    <li><a data-page="profile"><span class="nav-icon">👤</span> 个人中心</a></li>
+    <li><a id="logoutBtn" style="color:#ef4444"><span class="nav-icon">🚪</span> 退出登录</a></li>
+</ul>
         </aside>
 
         <main class="main-content">
@@ -1371,6 +1399,13 @@
                     <button class="tab" data-friend-tab="pending">好友申请</button>
                 </div>
                 <div id="friendListContent"></div>
+            </div>
+            
+            <!-- ===== 我的收藏页 ===== -->
+            <div id="page-favorites" class="page">
+                <div class="topbar"><h1>⭐ 我的收藏</h1></div>
+                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:20px">查看你收藏过的帖子</p>
+                <div id="favoritesList" class="favorite-page-list"></div>
             </div>
 
             <!-- ===== 个人中心页 ===== -->
