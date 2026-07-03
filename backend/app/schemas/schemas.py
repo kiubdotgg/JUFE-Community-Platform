@@ -64,6 +64,7 @@ class PostResponse(BaseModel):
     like_count: int
     comment_count: int
     is_liked: bool = False
+    is_favorited: bool = False
     created_at: datetime
 
     class Config:
@@ -121,6 +122,13 @@ class RecommendUser(BaseModel):
 class FavoriteItem(BaseModel):
     post_id: int
     created_at: datetime
+    content: str = ""
+    images: Optional[List[str]] = None
+    username: str = ""
+    avatar_url: str = ""
+    like_count: int = 0
+    comment_count: int = 0
+
 
 class FavoriteListResponse(BaseModel):
     items: List[FavoriteItem]
