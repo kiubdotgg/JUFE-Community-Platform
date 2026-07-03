@@ -76,3 +76,22 @@ class Friendship(Base):
     status = Column(Enum("pending", "accepted", "rejected"), default="pending")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+# new function:favorite
+class Favorite(Base):
+    __tablename__ = "favorites"
+    __table_args__ = (UniqueConstraint("user_id", "post_id", name="uk_favorite_user_post"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User", back_populates="favorites")
+    post = relationship("Post", back_populates="favorites")
+
+
+
+
+
+
