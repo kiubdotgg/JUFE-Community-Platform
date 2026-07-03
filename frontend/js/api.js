@@ -39,4 +39,8 @@ const api = {
   handleFriend(id,action) { return this.put(`/api/social/friendships/${id}?action=${action}`); },
   getPending()      { return this.get("/api/social/friendships"); },
   getFriends()      { return this.get("/api/social/friends"); },
+
+  favoritePost(id)   { return this.post(`/api/posts/${id}/favorite`); },
+  unfavoritePost(id) { return this.del(`/api/posts/${id}/favorite`); },
+  getFavorites()     { return this.get("/api/posts/favorites/me"); },
 };
