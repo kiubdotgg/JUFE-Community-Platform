@@ -1,10 +1,11 @@
+/* 全局重置 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* 页面主体样式 */
+/* 页面基础 */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -12,7 +13,7 @@ body {
     color: #fff;
 }
 
-/* 容器样式 */
+/* 外层容器 */
 .container {
     max-width: 900px;
     margin: 0 auto;
@@ -22,7 +23,7 @@ body {
     flex-direction: column;
 }
 
-/* 头部样式 */
+/* 顶部头部栏 */
 .header {
     background: rgba(30, 41, 59, 0.8);
     backdrop-filter: blur(10px);
@@ -41,6 +42,7 @@ body {
     gap: 15px;
 }
 
+/* 头部图标 */
 .header-icon {
     width: 50px;
     height: 50px;
@@ -62,7 +64,7 @@ body {
     color: #94a3b8;
 }
 
-/* 按钮样式 */
+/* 清空对话按钮 */
 .clear-btn {
     background: linear-gradient(135deg, #ef4444, #dc2626);
     border: none;
@@ -79,7 +81,7 @@ body {
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 }
 
-/* 消息区域样式 */
+/* 消息滚动区域 */
 .messages {
     flex: 1;
     overflow-y: auto;
@@ -92,7 +94,7 @@ body {
     max-height: 70vh;
 }
 
-/* 消息样式 */
+/* 单条消息容器 */
 .message {
     display: flex;
     gap: 12px;
@@ -100,6 +102,7 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
+/* 消息淡入动画 */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -111,10 +114,12 @@ body {
     }
 }
 
+/* 用户消息右对齐 */
 .message.user {
     flex-direction: row-reverse;
 }
 
+/* 头像通用样式 */
 .message-avatar {
     width: 40px;
     height: 40px;
@@ -126,14 +131,17 @@ body {
     flex-shrink: 0;
 }
 
+/* AI头像 */
 .message.assistant .message-avatar {
     background: linear-gradient(135deg, #06b6d4, #3b82f6);
 }
 
+/* 用户头像 */
 .message.user .message-avatar {
     background: linear-gradient(135deg, #10b981, #14b8a6);
 }
 
+/* 消息气泡 */
 .message-bubble {
     max-width: 75%;
     padding: 16px 20px;
@@ -142,17 +150,20 @@ body {
     font-size: 15px;
 }
 
+/* AI气泡样式 */
 .message.assistant .message-bubble {
     background: #1e293b;
     border: 1px solid #334155;
     border-radius: 16px 16px 16px 4px;
 }
 
+/* 用户气泡样式 */
 .message.user .message-bubble {
     background: linear-gradient(135deg, #06b6d4, #3b82f6);
     border-radius: 16px 16px 4px 16px;
 }
 
+/* 消息时间 */
 .message-time {
     font-size: 11px;
     color: #64748b;
@@ -163,7 +174,7 @@ body {
     color: #7dd3fc;
 }
 
-/* 正在输入样式 */
+/* 正在输入提示 */
 .typing {
     display: flex;
     gap: 12px;
@@ -176,6 +187,7 @@ body {
     padding: 20px 24px;
 }
 
+/* 加载圆点 */
 .typing-dot {
     width: 8px;
     height: 8px;
@@ -192,6 +204,7 @@ body {
     animation-delay: 0.4s;
 }
 
+/* 圆点弹跳动画 */
 @keyframes bounce {
     0%, 60%, 100% {
         transform: translateY(0);
@@ -201,7 +214,7 @@ body {
     }
 }
 
-/* 输入区域样式 */
+/* 底部输入栏 */
 .input-area {
     background: rgba(30, 41, 59, 0.8);
     backdrop-filter: blur(10px);
@@ -212,6 +225,7 @@ body {
     gap: 12px;
 }
 
+/* 输入框 */
 .input-area textarea {
     flex: 1;
     background: #0f172a;
@@ -226,6 +240,7 @@ body {
     font-family: inherit;
 }
 
+/* 输入框聚焦效果 */
 .input-area textarea:focus {
     border-color: #06b6d4;
     box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
@@ -235,7 +250,7 @@ body {
     color: #64748b;
 }
 
-/* 发送按钮样式 */
+/* 发送按钮 */
 .send-btn {
     background: linear-gradient(135deg, #06b6d4, #3b82f6);
     border: none;
@@ -256,6 +271,7 @@ body {
     box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
 }
 
+/* 按钮禁用态 */
 .send-btn:disabled {
     background: #334155;
     cursor: not-allowed;
@@ -263,7 +279,7 @@ body {
     box-shadow: none;
 }
 
-/* 响应式设计 */
+/* 移动端适配 */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
